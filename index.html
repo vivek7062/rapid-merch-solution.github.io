@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beautiful XML File Processing with Multiple Tabs</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            display: flex;
+            height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        /* Sidebar with Tabs */
+        .sidebar {
+            width: 250px;
+            background-color: #34495e;
+            padding: 30px 20px;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            box-sizing: border-box;
+            height: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar .tab-button {
+            width: 100%;
+            padding: 15px;
+            background-color: #2c3e50;
+            border: 1px solid #34495e;
+            margin-bottom: 10px;
+            text-align: center;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+        }
+
+        .sidebar .tab-button:hover,
+        .sidebar .tab-button.active {
+            background-color: #1abc9c;
+            border-color: #1abc9c;
+        }
+
+        /* Main Content Area */
+        .content {
+            flex-grow: 1;
+            padding: 40px;
+            background-color: #fff;
+            overflow-y: auto;
+            box-sizing: border-box;
+            border-left: 1px solid #eee;
+            transition: all 0.3s ease;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        h2 {
+            font-size: 2rem;
+            color: #34495e;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .form-inputs {
+            margin-bottom: 20px;
+            font-size: 1rem;
+        }
+
+        label {
+            font-size: 1.1rem;
+            color: #34495e;
+            margin-bottom: 10px;
+            display: block;
+            font-weight: 500;
+        }
+
+        input[type="file"],
+        textarea,
+        button {
+            width: 100%;
+            padding: 12px;
+            font-size: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        input[type="file"]:hover,
+        textarea:hover,
+        button:hover {
+            border-color: #1abc9c;
+        }
+
+        textarea {
+            resize: none;
+            height: 200px;
+        }
+
+        button {
+            background-color: #1abc9c;
+            color: #fff;
+            cursor: pointer;
+            border: none;
+            font-size: 1.2rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        button:hover:not(:disabled) {
+            background-color: #16a085;
+        }
+
+        .download-link {
+            display: none;
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .download-link button {
+            background-color: #3498db;
+            padding: 12px 20px;
+            font-size: 1rem;
+            border-radius: 6px;
+            font-weight: 500;
+            color: white;
+            transition: background-color 0.3s ease;
+        }
+
+        .download-link button:hover {
+            background-color: #2980b9;
+        }
+
+        /* Media Queries for Responsiveness */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+                padding: 20px;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .sidebar {
+                width: 180px;
+                padding: 15px;
+            }
+
+            .content {
+                padding: 15px;
+            }
+
+            h2 {
+                font-size: 1.3rem;
+            }
+
+            .sidebar .tab-button {
+                font-size: 1rem;
+                padding: 12px;
+            }
+
+            input[type="file"],
+            textarea,
+            button {
+                font-size: 0.9rem;
+                padding: 10px;
+            }
+
+            textarea {
+                height: 200px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <!-- Sidebar with Tabs -->
+        <div class="sidebar">
+            <div class="tab-button active" onclick="showTab(1)">Remove Product Taging</div>
+            <div class="tab-button" onclick="showTab(2)">Create Or Update Category</div>
+            <div class="tab-button" onclick="showTab(3)">Create or Update Promotions</div>
+            <div class="tab-button" onclick="showTab(4)">Create Menu Navigation</div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="content">
+            <!-- Tab 1 -->
+            <div class="tab-content active" id="tab1">
+                <h2>Tab 1: Upload Catalog XML to Unassign sku's from category</h2>
+                <form id="form1" class="form-inputs">
+                    <label for="fileInput1">Select XML file:</label>
+                    <input type="file" id="fileInput1" accept=".xml" required>
+
+                    <label for="stringInput1">Enter string(s) to remove (one per line):</label>
+                    <textarea id="stringInput1" placeholder="Enter one string per line" required></textarea>
+
+                    <button type="button" onclick="processFile(1)">Process File</button>
+                </form>
+                <textarea id="output1" readonly></textarea>
+                <div class="download-link" id="downloadLink1">
+                    <a id="downloadBtn1" href="#" download="processed-file1.xml">
+                        <button>Download Unassign Product XML</button>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Tab 2 -->
+            <div class="tab-content" id="tab2">
+                <h2>Tab 2: Upload and Process XML</h2>
+                <form id="form2" class="form-inputs">
+                    <label for="fileInput2">Select XML file:</label>
+                    <input type="file" id="fileInput2" accept=".xml" required>
+
+                    <label for="stringInput2">Enter string(s) to remove (one per line):</label>
+                    <textarea id="stringInput2" placeholder="Enter one string per line" required></textarea>
+
+                    <button type="button" onclick="processFile(2)">Process File</button>
+                </form>
+                <textarea id="output2" readonly></textarea>
+                <div class="download-link" id="downloadLink2">
+                    <a id="downloadBtn2" href="#" download="processed-file2.xml">
+                        <button>Download Processed XML</button>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Tab 3 -->
+            <div class="tab-content" id="tab3">
+                <h2>Tab 3: Upload and Process XML</h2>
+                <form id="form3" class="form-inputs">
+                    <label for="fileInput3">Select XML file:</label>
+                    <input type="file" id="fileInput3" accept=".xml" required>
+
+                    <label for="stringInput3">Enter string(s) to remove (one per line):</label>
+                    <textarea id="stringInput3" placeholder="Enter one string per line" required></textarea>
+
+                    <button type="button" onclick="processFile(3)">Process File</button>
+                </form>
+                <textarea id="output3" readonly></textarea>
+                <div class="download-link" id="downloadLink3">
+                    <a id="downloadBtn3" href="#" download="processed-file3.xml">
+                        <button>Download Processed XML</button>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Tab 4 -->
+            <div class="tab-content" id="tab4">
+                <h2>Tab 4: Upload and Process XML</h2>
+                <form id="form4" class="form-inputs">
+                    <label for="fileInput4">Select XML file:</label>
+                    <input type="file" id="fileInput4" accept=".xml" required>
+
+                    <label for="stringInput4">Enter string(s) to remove (one per line):</label>
+                    <textarea id="stringInput4" placeholder="Enter one string per line" required></textarea>
+
+                    <button type="button" onclick="processFile(4)">Process File</button>
+                </form>
+                <textarea id="output4" readonly></textarea>
+                <div class="download-link" id="downloadLink4">
+                    <a id="downloadBtn4" href="#" download="processed-file4.xml">
+                        <button>Download Processed XML</button>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showTab(tabIndex) {
+            // Hide all tabs and remove the active class from all tab buttons
+            const tabContents = document.querySelectorAll('.tab-content');
+            const tabButtons = document.querySelectorAll('.tab-button');
+
+            tabContents.forEach(content => content.classList.remove('active'));
+            tabButtons.forEach(button => button.classList.remove('active'));
+
+            // Show the selected tab and set its button to active
+            document.getElementById('tab' + tabIndex).classList.add('active');
+            tabButtons[tabIndex - 1].classList.add('active');
+        }
+
+        function processFile(tabIndex) {
+            const fileInput = document.getElementById('fileInput' + tabIndex);
+            const stringInput = document.getElementById('stringInput' + tabIndex).value.trim();
+            const outputArea = document.getElementById('output' + tabIndex);
+            const downloadLink = document.getElementById('downloadLink' + tabIndex);
+            const downloadBtn = document.getElementById('downloadBtn' + tabIndex);
+
+            if (!fileInput.files[0]) {
+                alert('Please select an XML file to upload.');
+                return;
+            }
+
+            if (!stringInput) {
+                alert('Please enter a category ID to search for.');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const stringsToRemove = stringInput.split('\n').map(s => s.trim()).filter(Boolean);  // Split by line and trim each category ID
+
+            // Create a FileReader to read the file content
+            const reader = new FileReader();
+
+            reader.onload = function (event) {
+                let xmlContent = event.target.result;
+
+                // Parse the XML content into a DOM structure
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(xmlContent, "application/xml");
+
+                // Get all category-assignment elements
+                const categoryAssignments = xmlDoc.getElementsByTagName('category-assignment');
+                const catalogMain = xmlDoc.getElementsByTagName('catalog');
+                const xmlns = "http://www.demandware.com/xml/impex/catalog/2006-10-31";
+                const catalog_id = "bbw-storefront-catalog-th";
+
+                // Array to store product-ids for the matching category-ids
+                const matchingProductIds = [];
+
+                // Loop through each category-assignment and check if its category-id is in the stringsToRemove array
+                matchingProductIds.push("<catalog xmlns=\"http://www.demandware.com/xml/impex/catalog/2006-10-31\" catalog-id=\"bbw-storefront-catalog-th\">");
+
+
+                for (let i = 0; i < categoryAssignments.length; i++) {
+                    const categoryAssignment = categoryAssignments[i];
+                    const categoryId = categoryAssignment.getAttribute('category-id');
+                    const productId = categoryAssignment.getAttribute('product-id');
+                    // If the category-id matches one of the strings in the stringsToRemove array, add the product-id to the array
+                    if (stringsToRemove.includes(categoryId)) {
+                        matchingProductIds.push('   <category-assignment category-id="' + categoryId + '" mode="delete" product-id="' + productId + '"/>');
+                    }
+                }
+                matchingProductIds.push("</catalog>");
+
+                // If there are matching product-ids, display them, else show a message indicating no matches
+                if (matchingProductIds.length > 0) {
+                    outputArea.value = matchingProductIds.join('\n');
+                } else {
+                    outputArea.value = 'No matching product IDs found for the provided category IDs.';
+                }
+
+                // Enable the download link
+
+                const blob = new Blob([outputArea.value], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                downloadBtn.href = url;
+                downloadLink.style.display = 'block'; // Show the download button
+            };
+
+            // Read the file as text
+            reader.readAsText(file);
+        }
+
+
+    </script>
+
+</body>
+
+</html>
