@@ -97,6 +97,7 @@
 
         input[type="file"],
         textarea,
+        input[type="text"],
         button {
             width: 100%;
             padding: 12px;
@@ -111,6 +112,7 @@
 
         input[type="file"]:hover,
         textarea:hover,
+        input[type="text"]:hover,
         button:hover {
             border-color: #1abc9c;
         }
@@ -196,6 +198,7 @@
 
             input[type="file"],
             textarea,
+            input[type="text"],
             button {
                 font-size: 0.9rem;
                 padding: 10px;
@@ -203,6 +206,29 @@
 
             textarea {
                 height: 200px;
+            }
+
+            .input-group {
+                display: flex;
+                width: 100%;
+                margin-bottom: 20px;
+            }
+
+            .checkbox-container {
+                display: flex;
+                justify-content: flex-end;
+                align-items: center;
+            }
+
+            .checkbox-container label {
+                font-size: 1rem;
+                color: #34495e;
+                display: inline-flex;
+                align-items: center;
+            }
+
+            .checkbox-container input {
+                margin-left: 10px;
             }
         }
     </style>
@@ -213,8 +239,8 @@
     <div class="container">
         <!-- Sidebar with Tabs -->
         <div class="sidebar">
-            <div class="tab-button active" onclick="showTab(1)">Remove Product Taging</div>
-            <div class="tab-button" onclick="showTab(2)">Create Or Update Category</div>
+            <div class="tab-button active" onclick="showTab(1)">Remove Taging By category ID's</div>
+            <div class="tab-button" onclick="showTab(2)">Remove Taging By Root Category</div>
             <div class="tab-button" onclick="showTab(3)">Create or Update Promotions</div>
             <div class="tab-button" onclick="showTab(4)">Create Menu Navigation</div>
         </div>
@@ -223,15 +249,15 @@
         <div class="content">
             <!-- Tab 1 -->
             <div class="tab-content active" id="tab1">
-                <h2>Tab 1: Upload Catalog XML to Unassign sku's from category</h2>
+                <h2>Upload Catalog XML to Unassign sku's from multiple category</h2>
                 <form id="form1" class="form-inputs">
                     <label for="fileInput1">Select XML file:</label>
                     <input type="file" id="fileInput1" accept=".xml" required>
 
-                    <label for="stringInput1">Enter string(s) to remove (one per line):</label>
-                    <textarea id="stringInput1" placeholder="Enter one string per line" required></textarea>
+                    <label for="stringInput1">Enter Category ID's to remove taging (one per line):</label>
+                    <textarea id="stringInput1" placeholder="Enter one category per line" required></textarea>
 
-                    <button type="button" onclick="processFile(1)">Process File</button>
+                    <button type="button" onclick="unAssignCategoryByCategory(1)">Process File</button>
                 </form>
                 <textarea id="output1" readonly></textarea>
                 <div class="download-link" id="downloadLink1">
@@ -243,15 +269,25 @@
 
             <!-- Tab 2 -->
             <div class="tab-content" id="tab2">
-                <h2>Tab 2: Upload and Process XML</h2>
+                <h2>Upload Catalog XML to Unassign sku's from all nested child category</h2>
                 <form id="form2" class="form-inputs">
                     <label for="fileInput2">Select XML file:</label>
                     <input type="file" id="fileInput2" accept=".xml" required>
 
-                    <label for="stringInput2">Enter string(s) to remove (one per line):</label>
-                    <textarea id="stringInput2" placeholder="Enter one string per line" required></textarea>
+                    <label for="stringInput2">Enter Root Category to unassign all child category products</label>
+                    <div class="input-group">
+                        <input type="text" id="stringInput2" placeholder="Enter root category name" required
+                            style="flex: 1;">
+                        <div class="checkbox-container"
+                            style="flex: 0.5; display: flex; justify-content: flex-end; align-items: center;">
+                            <label for="rootCategoryInclude" style="display: inline-flex; align-items: center;">
+                                Exclude Root Category
+                                <input type="checkbox" id="rootCategoryInclude">
+                            </label>
+                        </div>
+                    </div>
 
-                    <button type="button" onclick="processFile(2)">Process File</button>
+                    <button type="button" onclick="unAssignCategoryByRoot(2)">Process File</button>
                 </form>
                 <textarea id="output2" readonly></textarea>
                 <div class="download-link" id="downloadLink2">
@@ -271,7 +307,7 @@
                     <label for="stringInput3">Enter string(s) to remove (one per line):</label>
                     <textarea id="stringInput3" placeholder="Enter one string per line" required></textarea>
 
-                    <button type="button" onclick="processFile(3)">Process File</button>
+                    <button type="button" onclick="unAssignCategoryCategoryWise(3)">Process File</button>
                 </form>
                 <textarea id="output3" readonly></textarea>
                 <div class="download-link" id="downloadLink3">
@@ -291,7 +327,7 @@
                     <label for="stringInput4">Enter string(s) to remove (one per line):</label>
                     <textarea id="stringInput4" placeholder="Enter one string per line" required></textarea>
 
-                    <button type="button" onclick="processFile(4)">Process File</button>
+                    <button type="button" onclick="unAssignCategoryCategoryWise(4)">Process File</button>
                 </form>
                 <textarea id="output4" readonly></textarea>
                 <div class="download-link" id="downloadLink4">
@@ -317,7 +353,7 @@
             tabButtons[tabIndex - 1].classList.add('active');
         }
 
-        function processFile(tabIndex) {
+        function unAssignCategoryByCategory(tabIndex) {
             const fileInput = document.getElementById('fileInput' + tabIndex);
             const stringInput = document.getElementById('stringInput' + tabIndex).value.trim();
             const outputArea = document.getElementById('output' + tabIndex);
@@ -330,7 +366,7 @@
             }
 
             if (!stringInput) {
-                alert('Please enter a category ID to search for.');
+                alert('Please enter category IDs by saperate new line to unassign products');
                 return;
             }
 
@@ -350,23 +386,17 @@
                 // Get all category-assignment elements
                 const categoryAssignments = xmlDoc.getElementsByTagName('category-assignment');
                 const catalogMain = xmlDoc.getElementsByTagName('catalog');
-                const xmlns = "http://www.demandware.com/xml/impex/catalog/2006-10-31";
-                const catalog_id = "bbw-storefront-catalog-th";
-
-                // Array to store product-ids for the matching category-ids
+                const xmlns = xmlDoc.getElementsByTagName('catalog')[0].getAttribute('xmlns')
+                const catalog_id = xmlDoc.getElementsByTagName('catalog')[0].getAttribute('catalog-id');
                 const matchingProductIds = [];
+                matchingProductIds.push('<catalog xmlns="' + xmlns + '" catalog-id="' + catalog_id + '">');
+                const categorySet = new Set(stringsToRemove);
 
-                // Loop through each category-assignment and check if its category-id is in the stringsToRemove array
-                matchingProductIds.push("<catalog xmlns=\"http://www.demandware.com/xml/impex/catalog/2006-10-31\" catalog-id=\"bbw-storefront-catalog-th\">");
-
-
-                for (let i = 0; i < categoryAssignments.length; i++) {
-                    const categoryAssignment = categoryAssignments[i];
+                for (const categoryAssignment of categoryAssignments) {
                     const categoryId = categoryAssignment.getAttribute('category-id');
                     const productId = categoryAssignment.getAttribute('product-id');
-                    // If the category-id matches one of the strings in the stringsToRemove array, add the product-id to the array
-                    if (stringsToRemove.includes(categoryId)) {
-                        matchingProductIds.push('   <category-assignment category-id="' + categoryId + '" mode="delete" product-id="' + productId + '"/>');
+                    if (categorySet.has(categoryId)) {
+                        matchingProductIds.push(`<category-assignment category-id="${categoryId}" mode="delete" product-id="${productId}"/>`);
                     }
                 }
                 matchingProductIds.push("</catalog>");
@@ -390,6 +420,139 @@
             reader.readAsText(file);
         }
 
+        function unAssignCategoryByRoot(tabIndex) {
+            const fileInput = document.getElementById('fileInput' + tabIndex);
+            const stringsToRemove = document.getElementById('stringInput' + tabIndex).value.trim();
+            const outputArea = document.getElementById('output' + tabIndex);
+            const downloadLink = document.getElementById('downloadLink' + tabIndex);
+            const downloadBtn = document.getElementById('downloadBtn' + tabIndex);
+            var checkbox = document.getElementById('rootCategoryInclude');
+            var isChecked = checkbox.checked;
+
+            if (!fileInput.files[0]) {
+                alert('Please select an XML file to upload.');
+                return;
+            }
+
+            if (!stringsToRemove) {
+                alert('Please enter a Root Category ID to search for.');
+                return;
+            }
+
+            const file = fileInput.files[0];
+
+            // Create a FileReader to read the file content
+            const reader = new FileReader();
+
+            reader.onload = function (event) {
+                let xmlContent = event.target.result;
+
+                // Parse the XML content into a DOM structure
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(xmlContent, "application/xml");
+
+                // Get all category-assignment elements
+                const categoryList = xmlDoc.getElementsByTagName('category');
+                const categoryAssignments = xmlDoc.getElementsByTagName('category-assignment');
+                const catalogMain = xmlDoc.getElementsByTagName('catalog');
+                const xmlns = xmlDoc.getElementsByTagName('catalog')[0].getAttribute('xmlns')
+                const catalog_id = xmlDoc.getElementsByTagName('catalog')[0].getAttribute('catalog-id');
+
+                const matchingProductIds = [];
+
+                const queue = new Queue();
+                queue.enqueue(stringsToRemove);
+                const categorySet = new Set();
+                // Loop through each category-assignment and check if its category-id is in the stringsToRemove array
+
+                let catWithParent = new Map();
+
+                for (const category of categoryList) {
+                    const categoryId = category.getAttribute('category-id');
+                    const parentElement = category.getElementsByTagName('parent')[0];
+                    if (parentElement) {
+                        const parent = parentElement.textContent.trim();
+                        if (catWithParent.has(parent)) {
+                            catWithParent.get(parent).push(categoryId);
+                        } else {
+                            catWithParent.set(parent, [categoryId]);
+                        }
+                    }
+                }
+
+                while (queue.size() > 0) {
+                    const currentCategory = queue.peek();
+                    queue.dequeue();
+                    categorySet.add(currentCategory);
+                    if (catWithParent.has(currentCategory)) {
+                        const catList = catWithParent.get(currentCategory);
+                        for (const categoryId of catList) {
+                            queue.enqueue(categoryId);
+                        }
+                    }
+                }
+                if (isChecked) {
+                    categorySet.delete(stringsToRemove);
+                }
+
+                matchingProductIds.push('<catalog xmlns="' + xmlns + '" catalog-id="' + catalog_id + '">');
+                for (const categoryAssignment of categoryAssignments) {
+                    const categoryId = categoryAssignment.getAttribute('category-id');
+                    const productId = categoryAssignment.getAttribute('product-id');
+                    if (categorySet.has(categoryId)) {
+                        matchingProductIds.push(`<category-assignment category-id="${categoryId}" mode="delete" product-id="${productId}"/>`);
+                    }
+                }
+                matchingProductIds.push("</catalog>");
+
+                // If there are matching product-ids, display them, else show a message indicating no matches
+                if (matchingProductIds.length > 0) {
+                    outputArea.value = matchingProductIds.join('\n');
+                } else {
+                    outputArea.value = 'No matching product IDs found for the provided category IDs.';
+                }
+
+                // Enable the download link
+
+                const blob = new Blob([outputArea.value], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                downloadBtn.href = url;
+                downloadLink.style.display = 'block'; // Show the download button
+            };
+
+            // Read the file as text
+            reader.readAsText(file);
+        }
+
+        class Queue {
+            constructor() {
+                this.items = [];
+            }
+            enqueue(element) {
+                this.items.push(element);
+            }
+            dequeue() {
+                if (this.isEmpty()) {
+                    return "Queue is empty";
+                }
+                return this.items.shift();
+            }
+            peek() {
+                if (this.isEmpty()) {
+                    return "Queue is empty";
+                }
+                return this.items[0];
+            }
+            isEmpty() {
+                return this.items.length === 0;
+            }
+            size() {
+                return this.items.length;
+            }
+            print() {
+                console.log(this.items.toString());
+            }
+        }
 
     </script>
 
